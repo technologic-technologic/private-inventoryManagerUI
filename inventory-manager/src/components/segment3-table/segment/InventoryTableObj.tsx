@@ -4,11 +4,12 @@ import React from "react";
 import {Content} from "antd/es/layout/layout";
 
 const InventoryTableObj: React.FC = () => {
+
     return(
-        <Content>
-            <InventoryTable />
-            <InventoryTablePageSelector />
-        </Content>
+            <Content>
+                <InventoryTable />
+                <InventoryTablePageSelector />
+            </Content>
     )
 }
 

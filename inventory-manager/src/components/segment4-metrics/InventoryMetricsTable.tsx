@@ -53,6 +53,6 @@ const data: DataType[] = [
     },
 ];
 
-const App: React.FC = () => <Table<DataType> columns={columns} dataSource={data}/>;
+const App: React.FC = () => <Table<DataType> columns={columns} dataSource={data} pagination={false}/>;
 
 export default App;

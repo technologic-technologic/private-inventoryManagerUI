@@ -3,8 +3,21 @@ export interface Product {
     name: string;
     category: string;
     unitPrice: number;
-    expirationDate?: string;
-    quantityInStock: number;
-    creationDate: string;
+    expirationDate?: Date;
+    stockQuantity: number;
+    creationDate: Date;
     updatedDate?: string;
+}
+
+export interface FilterProducts {
+    name: string;
+    category: string;
+    unitPrice: number;
+    expirationDate: Date;
+    quantityInStock: number;
+}
+
+export interface ProductResponse {
+    products: Product[];
+    totalPages: number;
 }

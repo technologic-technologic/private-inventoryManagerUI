@@ -1,51 +1,198 @@
-import React, {useState} from 'react';
-import {Table} from 'antd';
+import React, {useRef, useState} from 'react';
+import {Button, Input, InputRef, Modal, Space, Table, TableColumnType} from 'antd';
 import type {TableColumnsType, TableProps} from 'antd';
 import {Product} from "../../types/Product";
+import {SearchOutlined} from '@ant-design/icons';
+import {useSearchContext} from "../../context/SearchContext";
+import {useProductsData} from "../../context/DataContext";
+import {deleteProduct} from "../../services/Requests";
+import ProductForm from "../segment2-new_product/ProductForm";
 
 type TableRowSelection<T extends object = object> = TableProps<T>['rowSelection'];
+type DataIndex = keyof Product;
 
-
-const columns: TableColumnsType<Product> = [
-    {
-        title: 'Category',
-        dataIndex: 'category',
-    },
-    {
-        title: 'Name',
-        dataIndex: 'name',
-    },
-    {
-        title: 'Price',
-        dataIndex: 'unitPrice',
-    },
-    {
-        title: 'Expiration Date',
-        dataIndex: 'expirationDate',
-    },
-    {
-        title: 'Stock',
-        dataIndex: 'quantityInStock',
-    },
-    {
-        title: 'Actions',
-        dataIndex: 'unitPrice',
-    },
-
-];
-
-const dataSource = Array.from({length: 46}).map<Product>((_, i) => ({
-    id: `${i}`,
-    category: `Edward King ${i}`,
-    name: `Edward King ${i}`,
-    unitPrice: 32,
-    expirationDate: `London, Park Lane no. ${i}`,
-    quantityInStock: i,
-    creationDate: 'asdfsdf',
-}));
 
 const InventoryTable: React.FC = () => {
     const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+    const [isModalVisible, setIsModalVisible] = useState(false);
+    const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+
+
+    const handleClose = () => {
+        setIsModalVisible(false);
+        setEditingProduct(null);
+    }
+
+    const {products, loading, total} = useProductsData();
+    const searchInput = useRef<InputRef>(null);
+
+    const {stockQuantity, page, setParams} = useSearchContext();
+
+
+    const handleTableChange: TableProps<Product>['onChange'] = (pagination, filters, sorter, extra) => {
+        setParams({page: ((page as number))});
+        console.log(total)
+        if ((filters.name !== undefined) && ((filters.name as unknown as string) !== '') && (filters.name !== null)) {
+            setParams({name: filters.name?.[0] as unknown as string});
+        }
+        if (filters.category !== undefined && (filters.category as unknown as string) !== '' && filters.category !== null) {
+            setParams({category: filters.category?.[0] as unknown as string});
+        }
+        if (filters.stockQuantity?.[0] && filters.stockQuantity?.[0] !== null) {
+            setParams({stockQuantity: filters.stockQuantity?.[0] as unknown as number});
+        }
+        const sortObj = Array.isArray(sorter) ? sorter : [sorter];
+        if (sortObj.length) {
+            const sortParams = sortObj
+                .filter(s => s.order)
+                .map(s => `${s.field},${s.order === 'descend' ? 'desc' : 'asc'}`);
+            setParams({sort: sortParams})
+        }
+    };
+
+    const getColumnSearchProps = (dataIndex: DataIndex): TableColumnType<Product> => ({
+        filterDropdown: ({setSelectedKeys, selectedKeys, confirm, clearFilters, close}) => (
+            <div style={{padding: 8}} onKeyDown={e => e.stopPropagation()}>
+                <Input
+                    ref={searchInput}
+                    placeholder={`Search ${dataIndex}`}
+                    value={selectedKeys[0]}
+                    onChange={e => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+                    onPressEnter={() => {
+                        if (!selectedKeys[0]) {
+                            setParams({[dataIndex]: null});
+                        }
+                        confirm();
+                        setParams({[dataIndex]: selectedKeys[0]});
+                    }}
+                    style={{marginBottom: 8, display: 'block'}}
+                />
+                <Space>
+                    <Button
+                        type="primary"
+                        onClick={() => {
+                            confirm();
+                            setParams({[dataIndex]: selectedKeys[0]});
+                        }}
+                        icon={<SearchOutlined/>}
+                        size="small"
+                        style={{width: 90}}
+                    >
+                        Search
+                    </Button>
+                    <Button
+                        onClick={() => {
+                            clearFilters?.();
+                            setParams({[dataIndex]: null});
+                        }}
+                        size="small"
+                        style={{width: 90}}
+                    >
+                        Reset
+                    </Button>
+                    <Button
+                        type="link"
+                        size="small"
+                        onClick={() => {
+                            confirm({closeDropdown: false});
+                            setParams({[dataIndex]: selectedKeys[0]});
+                        }}
+                    >
+                        Filter
+                    </Button>
+                    <Button
+                        type="link"
+                        size="small"
+                        onClick={() => close()}
+                    >
+                        Close
+                    </Button>
+                </Space>
+            </div>
+        ),
+        filterIcon: (filtered: boolean) => (
+            <SearchOutlined style={{color: filtered ? '#1677ff' : undefined}}/>
+        ),
+    });
+
+    const handleDelete = async (record: Product) => {
+        try {
+            await deleteProduct(record.id);
+        } catch (err: any) {
+            console.log(err);
+        }
+        setParams(
+            {
+                name: undefined,
+                page: 0,
+                category: undefined,
+                stockQuantity: 3,
+                sort: undefined
+            });
+    };
+
+    const handleEdit = async (record: Product) => {
+        try {
+            setIsModalVisible(true);
+            setEditingProduct(record);
+        } catch (err: any) {
+            console.log(err);
+        }
+    };
+
+    const columns: TableColumnsType<Product> = [
+        {
+            title: 'Category',
+            dataIndex: 'category',
+            sorter: {multiple: 3},
+            ...getColumnSearchProps("category")
+        },
+        {
+            title: 'Name',
+            dataIndex: 'name',
+            sorter: {multiple: 3},
+            ...getColumnSearchProps("name")
+        },
+        {
+            title: 'Price',
+            dataIndex: 'unitPrice',
+            sorter: {multiple: 3},
+        },
+        {
+            title: 'Expiration Date',
+            dataIndex: 'expirationDate',
+            sorter: {multiple: 3},
+            render: (_) => _ ? new Date(_).toLocaleDateString() : 'No date',
+        },
+        {
+            title: 'Stock',
+            dataIndex: 'stockQuantity',
+            sorter: {multiple: 3},
+            render: (_) => _ ?? '_',
+            filters: [
+                {text: 'All', value: '0'},
+                {text: 'Stock', value: '1'},
+                {text: 'No stock', value: '2'}
+            ],
+            filterMultiple: false,
+            filteredValue: stockQuantity !== undefined ? [String(stockQuantity)] : null,
+            onFilter: (value, _record) => {
+                return true;
+            },
+
+        },
+        {
+            title: 'Actions',
+            dataIndex: 'action',
+            render: (_, record) => (
+                <Space size="middle">
+                    <a onClick={() => handleEdit(record)}>Edit</a>
+                    <a onClick={() => handleDelete(record)}>Delete</a>
+                </Space>
+            ),
+        },
+
+    ];
 
     const onSelectChange = (newSelectedRowKeys: React.Key[]) => {
         console.log('selectedRowKeys changed: ', newSelectedRowKeys);
@@ -56,9 +203,6 @@ const InventoryTable: React.FC = () => {
         selectedRowKeys,
         onChange: onSelectChange,
         selections: [
-            Table.SELECTION_ALL,
-            Table.SELECTION_INVERT,
-            Table.SELECTION_NONE,
             {
                 key: 'odd',
                 text: 'Select Odd Row',
@@ -86,7 +230,32 @@ const InventoryTable: React.FC = () => {
         ],
     };
 
-    return <Table<Product> rowSelection={rowSelection} columns={columns} dataSource={dataSource}/>;
+    return <>
+        <Table<Product> rowSelection={rowSelection}
+                        columns={columns}
+                        dataSource={products}
+                        loading={loading}
+                        rowKey="id"
+                        onChange={handleTableChange}
+                        pagination={false}
+                        style={{width: "100%",}}
+        />
+        <Modal
+            title="Editar Producto"
+            open={isModalVisible}
+            onCancel={handleClose}
+            footer={null}
+            destroyOnHidden={true}
+        >
+            {editingProduct && (
+                <ProductForm
+                    mode="edit"
+                    initialValues={editingProduct}
+                    onClose={handleClose}
+                />
+            )}
+        </Modal>
+    </>;
 };
 
 export default InventoryTable;
