@@ -26,7 +26,9 @@ const ProductForm: React.FC<ProductFormProps> = ({initialValues, mode = "create"
             expirationDate: values.expirationDate
                 ? new Date(values.expirationDate.toISOString())
                 : undefined,
-            category: values.category[0]
+            category: typeof values.category === "string"
+                ? values.category
+                : values.category[0]
         };
 
         if (mode === 'edit') {
@@ -116,7 +118,7 @@ const ProductForm: React.FC<ProductFormProps> = ({initialValues, mode = "create"
             <Form.Item
                 name="creationDate"
                 label="creationDate"
-                rules={[{required: false, message: "Please enter the name"}]}
+                rules={[{required: false}]}
                 hidden={true}
             >
                 <Input placeholder="text"/>
@@ -124,7 +126,7 @@ const ProductForm: React.FC<ProductFormProps> = ({initialValues, mode = "create"
             <Form.Item
                 name="updateDate"
                 label="updateDate"
-                rules={[{required: false, message: "Please enter the name"}]}
+                rules={[{required: false}]}
                 hidden={true}
                 initialValue={new Date().toISOString()}
             >
@@ -133,7 +135,7 @@ const ProductForm: React.FC<ProductFormProps> = ({initialValues, mode = "create"
             <Form.Item
                 name="id"
                 label="id"
-                rules={[{required: false, message: "Please enter the name"}]}
+                rules={[{required: false}]}
                 hidden={true}
                 initialValue={initialValues?.id}
             >
@@ -142,22 +144,70 @@ const ProductForm: React.FC<ProductFormProps> = ({initialValues, mode = "create"
             <Form.Item
                 name="name"
                 label="Name"
-                rules={[{required: true, message: "Please enter the name"}]}
+                tooltip="Type product name"
+                rules={[
+                    {required: true, message: "Please enter the name"},
+                    {type: "string"},
+                    {
+                        validator: (_, value) => {
+                            if (!value) {
+                                return Promise.resolve();
+                            }
+                            const forbiddenWords = ["Name", "Test", "Admin", "Metrics"];
+                            const hasForbiddenWord = forbiddenWords.some((word) =>
+                                value.toLowerCase().includes(word.toLowerCase())
+                            );
+                            if (hasForbiddenWord) {
+                                return Promise.reject(new Error("The category contains forbidden words"));
+                            }
+                            return Promise.resolve();
+                        },
+                    },
+                ]}
                 initialValue={initialValues?.name}
             >
-                <Input placeholder="text"/>
+                <Input placeholder="Watermelon"/>
             </Form.Item>
 
             <Form.Item
                 name="category"
                 label="Category"
-                rules={[{required: true, message: "Please select or create a category"}]}
-                initialValue={initialValues?.category}
+                tooltip="Select or type a new category"
+                rules={[
+                    {required: true, message: "Please select or create a category"},
+                    {
+                        transform: (value) => {
+                            if (typeof value === "string") {
+                                return value;
+                            } else {
+                                return value[0] as string
+                            }
+                        }
+                    },
+                    {
+                        validator: (_, value) => {
+                            if (!value) {
+                                return Promise.resolve();
+                            }
+                            const forbiddenWords = ["Overall", "Total", "Summary", "Metrics"];
+                            const hasForbiddenWord = value.some((entry: string) =>
+                                forbiddenWords.some((word) =>
+                                    entry.toLowerCase().includes(word.toLowerCase())
+                                )
+                            );
+                            if (hasForbiddenWord) {
+                                return Promise.reject(new Error("The category contains forbidden words"));
+                            }
+                            return Promise.resolve();
+                        },
+                    }
+                ]}
+                initialValue={initialValues?.category ? [initialValues?.category] : undefined}
             >
                 <Select
                     mode="tags"
                     maxCount={1}
-                    placeholder="Select or type a new category"
+                    placeholder="Food"
                     allowClear
                     style={{width: '100%'}}
                     options={options}
@@ -167,35 +217,67 @@ const ProductForm: React.FC<ProductFormProps> = ({initialValues, mode = "create"
             <Form.Item
                 name="stockQuantity"
                 label="Stock"
+                tooltip="Please enter the product stock availability"
                 rules={[
                     {required: true, message: "Please enter stock quantity"},
                     {
                         pattern: /^\d+?$/,
-                        message: "Only numeric values are allowed (e.g. 123 or 123.45)",
+                        message: "Only natural numbers allowed (e.g. 10, 1, 239)",
+                    },
+                    {
+                        type: "number", message: "Only numbers allowed"
+                    },
+                    {
+                        validator: (_, value) => {
+                            if (!value) {
+                                return Promise.resolve();
+                            } else if (typeof value != "number") {
+                                return Promise.reject(new Error("Please enter stock quantity (e.g 0 or any natural number)"));
+                            } else if (value === null) {
+                                return Promise.reject(new Error("Please enter stock quantity"));
+                            } else if (!Number.isInteger(value) || value < 0) {
+                                return Promise.reject(new Error("Only natural numbers allowed (e.g. 0, 10, 239)"));
+                            }
+                            return Promise.resolve();
+                        },
                     },]}
                 initialValue={initialValues?.stockQuantity}
             >
-                <InputNumber style={{width: "100%"}} min={0}/>
+                <InputNumber style={{width: "100%"}} min={0} placeholder={"10"}/>
             </Form.Item>
 
             <Form.Item
                 name="unitPrice"
                 label="Unit Price"
+                tooltip="Please enter the product price"
                 rules={[
                     {required: true, message: "Please enter the price of the product"},
                     {
                         pattern: /^\d+(\.\d+)?$/,
                         message: "Only numeric values are allowed (e.g. 123 or 123.45)",
                     },
+                    {
+                        validator: (_, value) => {
+                            if (!value) {
+                                return Promise.resolve();
+                            } else if (value === null) {
+                                return Promise.reject(new Error("Please enter the price of the product"));
+                            } else if (typeof value !== "number" || isNaN(value) || value < 0) {
+                                return Promise.reject(new Error("Only valid numeric values ≥ 0 are allowed (e.g. 123 or 123.45)"));
+                            }
+                            return Promise.resolve();
+                        },
+                    },
                 ]}
                 initialValue={initialValues?.unitPrice}
             >
-                <InputNumber style={{width: "100%"}} min={0} step={0.01}/>
+                <InputNumber style={{width: "100%"}} min={0} step={0.01} placeholder="80.99"/>
             </Form.Item>
 
             <Form.Item
                 name="expirationDate"
                 label="Expiration Date"
+                tooltip="Not necessary. Expiration date of the product"
                 rules={[{required: false, message: "Please select expiration date"}]}
                 initialValue={
                     initialValues?.expirationDate
@@ -203,7 +285,7 @@ const ProductForm: React.FC<ProductFormProps> = ({initialValues, mode = "create"
                         : undefined}
 
             >
-                <DatePicker style={{width: "100%"}}/>
+                <DatePicker style={{width: "100%"}} placeholder="01/12/1999"/>
             </Form.Item>
 
             <Form.Item>

@@ -1,37 +1,32 @@
-import React, {useRef, useState} from 'react';
-import {Button, Input, InputRef, Modal, Space, Table, TableColumnType} from 'antd';
+import React, {MouseEventHandler, useRef, useState} from 'react';
+import {Button, Input, InputRef, Modal, Popconfirm, Space, Table, TableColumnType} from 'antd';
 import type {TableColumnsType, TableProps} from 'antd';
 import {Product} from "../../types/Product";
 import {SearchOutlined} from '@ant-design/icons';
 import {useSearchContext} from "../../context/SearchContext";
 import {useProductsData} from "../../context/DataContext";
-import {deleteProduct} from "../../services/Requests";
+import {deleteProduct, markInStock, markOutOfStock} from "../../services/Requests";
 import ProductForm from "../segment2-new_product/ProductForm";
 
-type TableRowSelection<T extends object = object> = TableProps<T>['rowSelection'];
 type DataIndex = keyof Product;
-
-
 const InventoryTable: React.FC = () => {
-    const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+    const [selectedRows, setSelectedRows] = useState<Product[]>([]);
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-
 
     const handleClose = () => {
         setIsModalVisible(false);
         setEditingProduct(null);
     }
 
-    const {products, loading, total} = useProductsData();
+    const {products, loading} = useProductsData();
     const searchInput = useRef<InputRef>(null);
 
     const {stockQuantity, page, setParams} = useSearchContext();
 
 
-    const handleTableChange: TableProps<Product>['onChange'] = (pagination, filters, sorter, extra) => {
+    const handleTableChange: TableProps<Product>['onChange'] = (pagination, filters, sorter) => {
         setParams({page: ((page as number))});
-        console.log(total)
         if ((filters.name !== undefined) && ((filters.name as unknown as string) !== '') && (filters.name !== null)) {
             setParams({name: filters.name?.[0] as unknown as string});
         }
@@ -120,15 +115,27 @@ const InventoryTable: React.FC = () => {
             await deleteProduct(record.id);
         } catch (err: any) {
             console.log(err);
+        } finally {
+            if (stockQuantity === 0) {
+                setParams(
+                    {
+                        name: undefined,
+                        page: 0,
+                        category: undefined,
+                        stockQuantity: 3,
+                        sort: undefined
+                    })
+            } else {
+                setParams(
+                    {
+                        name: undefined,
+                        page: 0,
+                        category: undefined,
+                        stockQuantity: 0,
+                        sort: undefined
+                    })
+            }
         }
-        setParams(
-            {
-                name: undefined,
-                page: 0,
-                category: undefined,
-                stockQuantity: 3,
-                sort: undefined
-            });
     };
 
     const handleEdit = async (record: Product) => {
@@ -145,23 +152,27 @@ const InventoryTable: React.FC = () => {
             title: 'Category',
             dataIndex: 'category',
             sorter: {multiple: 3},
+            filteredValue: undefined,
             ...getColumnSearchProps("category")
         },
         {
             title: 'Name',
             dataIndex: 'name',
             sorter: {multiple: 3},
+            filteredValue: undefined,
             ...getColumnSearchProps("name")
         },
         {
             title: 'Price',
             dataIndex: 'unitPrice',
             sorter: {multiple: 3},
+            filteredValue: undefined
         },
         {
             title: 'Expiration Date',
             dataIndex: 'expirationDate',
             sorter: {multiple: 3},
+            filteredValue: undefined,
             render: (_) => _ ? new Date(_).toLocaleDateString() : 'No date',
         },
         {
@@ -184,51 +195,72 @@ const InventoryTable: React.FC = () => {
         {
             title: 'Actions',
             dataIndex: 'action',
+            filteredValue: undefined,
             render: (_, record) => (
                 <Space size="middle">
                     <a onClick={() => handleEdit(record)}>Edit</a>
-                    <a onClick={() => handleDelete(record)}>Delete</a>
+                    <Popconfirm
+                        title="Are you sure?"
+                        description="This cannot be undone"
+                        onConfirm={() => handleDelete(record)}
+                        okText="Yes"
+                        cancelText="Cancel"
+                    >
+                        <a>Delete</a>
+                    </Popconfirm>
                 </Space>
             ),
         },
 
     ];
 
-    const onSelectChange = (newSelectedRowKeys: React.Key[]) => {
-        console.log('selectedRowKeys changed: ', newSelectedRowKeys);
-        setSelectedRowKeys(newSelectedRowKeys);
+    const rowSelection = {
+        onChange: (_: any, selectedRowsData: Product[]) => {
+            setSelectedRows(selectedRowsData);
+        },
     };
 
-    const rowSelection: TableRowSelection<Product> = {
-        selectedRowKeys,
-        onChange: onSelectChange,
-        selections: [
-            {
-                key: 'odd',
-                text: 'Select Odd Row',
-                onSelect: (changeableRowKeys) => {
-                    let newSelectedRowKeys: any[];
-                    newSelectedRowKeys = changeableRowKeys.filter((_, index) => {
-                        return index % 2 === 0;
-
-                    });
-                    setSelectedRowKeys(newSelectedRowKeys);
-                },
-            },
-            {
-                key: 'even',
-                text: 'Select Even Row',
-                onSelect: (changeableRowKeys) => {
-                    let newSelectedRowKeys: any[];
-                    newSelectedRowKeys = changeableRowKeys.filter((_, index) => {
-                        return index % 2 !== 0;
-
-                    });
-                    setSelectedRowKeys(newSelectedRowKeys);
-                },
-            },
-        ],
+    const changeAvailabilityOfSelected = async () => {
+        for (const product of selectedRows) {
+            if (product.stockQuantity as number > 0) {
+                await markOutOfStock(product.id);
+            } else {
+                await markInStock(product.id);
+            }
+        }
     };
+
+
+    const onClickOutOfStock: MouseEventHandler<HTMLElement> = async () => {
+        try {
+            await changeAvailabilityOfSelected().then().finally(() => {
+                if (stockQuantity === 0) {
+                    setParams(
+                        {
+                            name: undefined,
+                            page: 0,
+                            category: undefined,
+                            stockQuantity: 3,
+                            sort: undefined
+                        })
+                } else {
+                    setParams(
+                        {
+                            name: undefined,
+                            page: 0,
+                            category: undefined,
+                            stockQuantity: 0,
+                            sort: undefined
+                        })
+                }
+            });
+        } catch (e) {
+            console.log(e)
+        } finally {
+            setSelectedRows([]);
+        }
+    };
+
 
     return <>
         <Table<Product> rowSelection={rowSelection}
@@ -240,8 +272,20 @@ const InventoryTable: React.FC = () => {
                         pagination={false}
                         style={{width: "100%",}}
         />
+        {selectedRows.length > 0 && (
+            <>
+                <Button
+                    danger
+                    onClick={onClickOutOfStock}
+                    style={{marginBottom: 16, flex: "min-content"}}
+                >
+                    Change availability
+                </Button>
+            </>
+
+        )}
         <Modal
-            title="Editar Producto"
+            title="Edit Product"
             open={isModalVisible}
             onCancel={handleClose}
             footer={null}

@@ -69,11 +69,11 @@ export const updateProduct = async (id: string, product: Partial<Product>): Prom
 };
 
 export const markOutOfStock = async (id: string): Promise<void> => {
-    await axios.post(`${BASE_URL}/products/${id}/outofstock`);
+    await axios.patch(`${BASE_URL}/products/${id}/outofstock`);
 };
 
 export const markInStock = async (id: string): Promise<void> => {
-    await axios.put(`${BASE_URL}/products/${id}/instock`);
+    await axios.patch(`${BASE_URL}/products/${id}/instock`);
 };
 
 export const deleteProduct = async (id: string): Promise<void> => {

@@ -14,7 +14,7 @@ const NewProductButton = () => {
         <div className="App">
             <Button type="primary" onClick={showModal}>Add new product</Button>
             <Modal
-                title="Agregar nuevo producto"
+                title="Add new product to inventory"
                 open={isModalVisible}
                 onCancel={handleClose}
                 footer={null}

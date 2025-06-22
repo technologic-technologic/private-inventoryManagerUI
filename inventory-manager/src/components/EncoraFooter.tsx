@@ -10,7 +10,7 @@ const EncoraFooter: React.FC = () => {
         <Layout>
             <Content style={{padding: '0 48px'}}>
                 <Footer style={{textAlign: 'center'}}>
-                    Ant Design ©{new Date().getFullYear()} Created by Ant UED
+                    Encora ©{new Date().getFullYear()} Created by Spark Intern: Leonardo Trevizo Herrera
                 </Footer>
             </Content>
 
