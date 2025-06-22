@@ -1,58 +1,49 @@
 import React from 'react';
-import {Table} from 'antd';
-import type {TableProps} from 'antd';
+import {Table, type TableColumnsType} from 'antd';
+import {CategorySummary} from "../../types/Product";
+import {useProductsData} from "../../context/DataContext";
 
-interface DataType {
-    category: string;
-    totalProducts: string;
-    totalValue: number;
-    averagePrice: string;
+const InventoryMetricsTable: React.FC = () => {
+    const {summary} = useProductsData();
+
+    const columns: TableColumnsType<CategorySummary> = [
+        {
+            title: '',
+            dataIndex: 'category',
+        },
+        {
+            title: 'Total Products in Stock',
+            dataIndex: 'productsInStock',
+        },
+        {
+            title: 'Total Value in Stock',
+            dataIndex: 'valueInStock',
+        },
+        {
+            title: 'Average Price in Stock',
+            dataIndex: 'averageValue',
+        },
+    ];
+
+    return (
+        <Table columns={columns}
+               dataSource={summary}
+               pagination={false}
+               style={{width: "100%",}}
+               scroll={{y: 280}}
+               summary={(overall) => {
+                   const overallStock = overall.reduce((accu, actual) => accu+actual.productsInStock,0);
+                   const overallValue = overall.reduce((acc,actual) => acc+actual.valueInStock,0);
+                   return(
+                       <Table.Summary.Row>
+                           <Table.Summary.Cell index={summary?.length || 0}>Overall</Table.Summary.Cell>
+                           <Table.Summary.Cell index={summary?.length || 0}>{overallStock}</Table.Summary.Cell>
+                           <Table.Summary.Cell index={summary?.length || 0}>{overallValue}</Table.Summary.Cell>
+                           <Table.Summary.Cell index={summary?.length || 0}>{overallValue/overallStock}</Table.Summary.Cell>
+                       </Table.Summary.Row>
+                   )
+               }}
+        />);
 }
 
-const columns: TableProps<DataType>['columns'] = [
-    {
-        title: '',
-        dataIndex: 'category',
-        key: 'category',
-    },
-    {
-        title: 'Total Products in Stock',
-        dataIndex: 'totalProducts',
-        key: 'totalProducts',
-    },
-    {
-        title: 'Total Value in Stock',
-        dataIndex: 'totalValue',
-        key: 'totalValue',
-    },
-    {
-        title: 'Average Price in Stock',
-        key: 'averagePrice',
-        dataIndex: 'averagePrice',
-    },
-];
-
-const data: DataType[] = [
-    {
-        category: 'John Brown',
-        totalValue: 32,
-        totalProducts: 'New York No. 1 Lake Park',
-        averagePrice: 'nice',
-    },
-    {
-        category: 'Jim Green',
-        totalValue: 42,
-        totalProducts: 'London No. 1 Lake Park',
-        averagePrice: 'loser',
-    },
-    {
-        category: 'Joe Black',
-        totalValue: 32,
-        totalProducts: 'Sydney No. 1 Lake Park',
-        averagePrice: 'cool',
-    },
-];
-
-const App: React.FC = () => <Table<DataType> columns={columns} dataSource={data} pagination={false}/>;
-
-export default App;
+export default InventoryMetricsTable;

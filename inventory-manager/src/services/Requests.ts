@@ -25,6 +25,10 @@ export const getCategories = async (): Promise<AxiosResponse<any, any>> => {
     return await axios.get(`${BASE_URL}/products/categories`);
 };
 
+export const getSummary = async (): Promise<AxiosResponse<any, any>> => {
+    return await axios.get(`${BASE_URL}/products/summary`);
+};
+
 export const getFilteredProducts = async (params?: {
     name?: string;
     category?: string[];

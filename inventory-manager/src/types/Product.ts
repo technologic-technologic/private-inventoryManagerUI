@@ -21,3 +21,11 @@ export interface ProductResponse {
     products: Product[];
     totalPages: number;
 }
+
+export interface CategorySummary {
+    averageValue: number;
+    category: string;
+    productsInStock: number;
+    valueInStock: number;
+
+}

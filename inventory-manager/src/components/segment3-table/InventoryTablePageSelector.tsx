@@ -7,10 +7,7 @@ const InventoryTablePageSelector: React.FC = () => {
     const {page, setParams} = useSearchContext();
     const {total} = useProductsData();
 
-    console.log(total);
-
     const handlePageChange: PaginationProps['onChange'] = (pagination) => {
-        console.log(pagination)
         setParams({page: ((pagination as number) - 1)});
     }
     return (
@@ -22,4 +19,5 @@ const InventoryTablePageSelector: React.FC = () => {
         />
     )
 }
+
 export default InventoryTablePageSelector;

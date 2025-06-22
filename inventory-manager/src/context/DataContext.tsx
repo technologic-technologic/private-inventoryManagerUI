@@ -1,6 +1,6 @@
 import React, {createContext, useEffect, useState} from "react";
-import {Product} from "../types/Product";
-import {getCategories, getFilteredProducts, getProducts} from "../services/Requests";
+import {CategorySummary, Product} from "../types/Product";
+import {getCategories, getFilteredProducts, getProducts, getSummary} from "../services/Requests";
 import {useSearchContext} from "./SearchContext";
 
 interface ProductDataContextProps {
@@ -9,6 +9,7 @@ interface ProductDataContextProps {
     error: string | null;
     total: number | null;
     categories: string[];
+    summary: CategorySummary[] | undefined;
     refreshProducts: () => Promise<void>;
 }
 
@@ -20,6 +21,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({children}
     const [error, setError] = useState<string | null>(null);
     const [total, setTotal] = useState<number>(0);
     const [categories, setCategories] = useState<string[]>([""]);
+    const [summary, setSummary] = useState<CategorySummary[]>();
 
 
     const refreshProducts = async () => {
@@ -30,6 +32,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({children}
             setTotal(fetched.totalPages);
             const fetchedCategories = await getCategories();
             setCategories(fetchedCategories.data);
+            const fetchedSummary = await getSummary();
+            setSummary(fetchedSummary.data);
 
         } catch (err: any) {
             setError(err.message || "Unknown error");
@@ -43,7 +47,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({children}
     }, []);
 
     return (
-        <DataContext.Provider value={{products, loading, error, total, categories, refreshProducts}}>
+        <DataContext.Provider value={{products, loading, error, total, categories, summary, refreshProducts}}>
             {children}
         </DataContext.Provider>
     );
@@ -57,6 +61,7 @@ export function useProductsData() {
     const [error, setError] = useState<string | null>(null);
     const [total, setTotal] = useState<number>(0);
     const [categories, setCategories] = useState<string[]>([""]);
+    const [summary, setSummary] = useState<CategorySummary[]>();
 
 
     useEffect(() => {
@@ -81,6 +86,9 @@ export function useProductsData() {
                 const fetchedCategories = await getCategories();
                 setCategories(fetchedCategories.data);
 
+                const fetchedSummary = await getSummary();
+                setSummary(fetchedSummary.data);
+
             } catch (err: any) {
                 setError(err.message);
             } finally {
@@ -91,5 +99,5 @@ export function useProductsData() {
         fetchData().then();
     }, [name, category, stockQuantity, page, sort]);
 
-    return {products, loading, error, total, categories};
+    return {products, loading, error, total, categories, summary};
 }
