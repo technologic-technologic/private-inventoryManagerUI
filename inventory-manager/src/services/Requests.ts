@@ -1,7 +1,7 @@
 import axios, {AxiosResponse} from "axios";
 import {Product, ProductResponse} from "../types/Product";
 
-const BASE_URL = "http://localhost:8080";
+const BASE_URL = "http://localhost:9090";
 
 export const getProducts = async (filters?: {
     name?: string;
