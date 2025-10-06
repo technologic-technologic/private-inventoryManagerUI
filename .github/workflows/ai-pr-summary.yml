@@ -53,7 +53,12 @@ jobs:
           prompt = (
             "You are a code reviewer. Summarize this PR in 2-20 bullets. "
             "Include WHAT changed, WHY it matters, RISKS, TESTS to add, and any BREAKING CHANGES. "
-            "Highlight key fetures or changes. Consider markdown as the default output format."
+            "Highlight key features or changes. Consider markdown as the default output format."
+            "Keep in mind the following points:"
+            "1) If DIFF shows only documentation files (e.g., .md/.mdx/.txt/README), state 'Docs-only change', "
+            "  make clear that the change is included only in documentation files, if that is the case, "
+            "  otherwise explain normally, considering the DIFF changes like normal. "
+            "2) Include a short list of changed file paths as extracted from DIFF. "
             "Keep it concise and actionable.\n\nDIFF:\n" + diff
           )
 
@@ -77,6 +82,39 @@ jobs:
           added = len(re.findall(r"^\\+[^+].*$", diff, flags=re.M))
           removed = len(re.findall(r"^\\-[^-].*$", diff, flags=re.M))
           files = re.findall(r"^\\+\\+\\+ b/(.+)$", diff, flags=re.M)
+          
+          lower_paths = [f.lower() for f in files]
+          DOC_EXT = (".md", ".mdx", ".txt", ".rst", ".adoc")
+          is_doc  = lambda p: p.endswith(DOC_EXT) or "/docs/" in p or "/doc/" in p
+          docs_only = len(files) > 0 and all(is_doc(p) for p in lower_paths)
+          
+          # ---------- Doc-only summary ----------
+          if docs_only:
+              bullets_changed = []
+              for f in files[:20]:  # evita listas enormes
+                  bullets_changed.append(f"- `{f}`")
+              doc_summary = [
+                  "## PR Summary",
+                  "",
+                  "### WHAT Changed",
+                  "- **Docs-only change** detected from DIFF.",
+                  f"- Files changed ({len(files)}):",
+                  *bullets_changed,
+                  "",
+                  "### WHY It Matters",
+                  "- Improves documentation/README clarity and onboarding experience.",
+                  "",
+                  "### RISKS",
+                  "- None to runtime behavior (documentation only).",
+                  "",
+                  "### TESTS to Add",
+                  "- N/A (no code changes).",
+                  "",
+                  "### BREAKING CHANGES",
+                  "- None.",
+              ]
+              pathlib.Path("summary.txt").write_text("\n".join(doc_summary), encoding="utf-8")
+              raise SystemExit(0)
 
           scopes = set()
           for f in files:
