@@ -1,8 +1,8 @@
 import React, {createContext, useContext, useState} from 'react';
 
 type FilterParams = {
-    name: string | undefined;
-    category: string | undefined;
+    name: string | undefined | null;
+    category: string | undefined | null;
     stockQuantity: number | undefined;
     page: number | undefined;
     sort: string[] | undefined;
@@ -24,11 +24,11 @@ const SearchContext = createContext<FilterParams>(defaultValues);
 export const useSearchContext = () => useContext(SearchContext);
 
 export const SearchProvider: React.FC<{ children: React.ReactNode }> = ({children}) => {
-    const [name, setName] = useState('');
+    const [name, setName] = useState<string|null>('');
     const [stockQuantity, setStockQuantity] = useState(0);
     const [page, setPage] = useState(0);
     const [sort, setSort] = useState(['']);
-    const [category, setCategory] = useState('');
+    const [category, setCategory] = useState<string|null>('');
 
     const setParams = (params: Partial<FilterParams>) => {
         if (params.name !== undefined && params.name !== '') setName(params.name);
