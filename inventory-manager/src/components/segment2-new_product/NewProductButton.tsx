@@ -11,7 +11,14 @@ const NewProductButton = () => {
     }
 
     return (
-        <div className="App">
+        <div className="App"
+             style={{
+                 display: 'flex',
+                 justifyContent: 'space-between',
+                 alignItems: 'center',   // <- vertical alignment
+                 marginBottom: 16,
+             }}
+        >
             <Button type="primary" onClick={showModal}>Add new product</Button>
             <Modal
                 title="Add new product to inventory"
