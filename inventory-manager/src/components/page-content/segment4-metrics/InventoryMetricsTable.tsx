@@ -1,7 +1,7 @@
 import React from 'react';
 import {Table, type TableColumnsType} from 'antd';
-import {CategorySummary} from "../../types/Product";
-import {useProductsData} from "../../context/DataContext";
+import type {CategorySummary} from "../../../types/Product";
+import {useProductsData} from "../../../context/DataContext";
 
 const InventoryMetricsTable: React.FC = () => {
     const {summary} = useProductsData();

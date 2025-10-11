@@ -1,7 +1,7 @@
 import React from "react";
 import {Input} from "antd";
-import {useSearchContext} from "../../../context/SearchContext";
-import {Product} from "../../../types/Product";
+import {useSearchContext} from "../../../../context/SearchContext";
+import type {Product} from "../../../../types/Product";
 
 interface Props {
     parameter: keyof Product;

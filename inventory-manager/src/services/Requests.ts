@@ -1,5 +1,5 @@
-import axios, {AxiosResponse} from "axios";
-import {Product, ProductResponse} from "../types/Product";
+import axios, {type AxiosResponse} from "axios";
+import type {Product, ProductResponse} from "../types/Product";
 
 const BASE_URL = "http://localhost:9090";
 

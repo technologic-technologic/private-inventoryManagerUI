@@ -1,10 +1,10 @@
 import React from "react";
 import {Button, DatePicker, Form, Input, InputNumber, Select, Space} from "antd";
-import {Product} from "../../types/Product";
-import {createProduct, updateProduct} from "../../services/Requests";
-import {useSearchContext} from "../../context/SearchContext";
+import type {Product} from "../../../types/Product";
+import {createProduct, updateProduct} from "../../../services/Requests";
+import {useSearchContext} from "../../../context/SearchContext";
 import dayjs from "dayjs";
-import {useProductsData} from "../../context/DataContext";
+import {useProductsData} from "../../../context/DataContext";
 
 
 interface ProductFormProps {

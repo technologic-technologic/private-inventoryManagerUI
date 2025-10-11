@@ -2,9 +2,9 @@ import React from 'react';
 import {Col, Layout} from 'antd';
 import NewProductButton from "./segment2-new_product/NewProductButton";
 import InventoryTableObj from "./segment3-table/segment/InventoryTableObj";
-import {SearchProvider} from "../context/SearchContext";
+import {SearchProvider} from "../../context/SearchContext";
 import InventoryMetricsTable from "./segment4-metrics/InventoryMetricsTable";
-import {DataProvider} from "../context/DataContext";
+import {DataProvider} from "../../context/DataContext";
 import SearchByComponent from "./segment1-search_product/SearchByBar";
 
 const HomePageContent: React.FC = () => {

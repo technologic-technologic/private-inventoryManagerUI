@@ -1,11 +1,11 @@
-import React, {MouseEventHandler, useRef, useState} from 'react';
-import {Button, Input, InputRef, Modal, Popconfirm, Space, Table, TableColumnType} from 'antd';
+import React, {type MouseEventHandler, useRef, useState} from 'react';
+import {Button, Input, type InputRef, Modal, Popconfirm, Space, Table, type TableColumnType} from 'antd';
 import type {TableColumnsType, TableProps} from 'antd';
-import {Product} from "../../types/Product";
+import type {Product} from "../../../types/Product";
 import {SearchOutlined} from '@ant-design/icons';
-import {useSearchContext} from "../../context/SearchContext";
-import {useProductsData} from "../../context/DataContext";
-import {deleteProduct, markInStock, markOutOfStock} from "../../services/Requests";
+import {useSearchContext} from "../../../context/SearchContext";
+import {useProductsData} from "../../../context/DataContext";
+import {deleteProduct, markInStock, markOutOfStock} from "../../../services/Requests";
 import ProductForm from "../segment2-new_product/ProductForm";
 
 type DataIndex = keyof Product;
@@ -25,7 +25,7 @@ const InventoryTable: React.FC = () => {
     const {stockQuantity, page, setParams} = useSearchContext();
 
 
-    const handleTableChange: TableProps<Product>['onChange'] = (pagination, filters, sorter) => {
+    const handleTableChange: TableProps<Product>['onChange'] = (_pagination, filters, sorter) => {
         setParams({page: ((page as number))});
         if ((filters.name !== undefined) && ((filters.name as unknown as string) !== '') && (filters.name !== null)) {
             setParams({name: filters.name?.[0] as unknown as string});
@@ -187,7 +187,7 @@ const InventoryTable: React.FC = () => {
             ],
             filterMultiple: false,
             filteredValue: stockQuantity !== undefined ? [String(stockQuantity)] : null,
-            onFilter: (value, _record) => {
+            onFilter: (_value, _record) => {
                 return true;
             },
 

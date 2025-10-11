@@ -1,6 +1,6 @@
 import { Cascader } from 'antd';
 import React from 'react';
-import { useSearchContext } from '../../../context/SearchContext';
+import { useSearchContext } from '../../../../context/SearchContext';
 
 const STOCK_OPTIONS = [
     { label: 'Everything', value: '0' },

@@ -1,4 +1,4 @@
-import {deleteProduct, markOutOfStock} from "../../services/Requests";
+import {deleteProduct, markOutOfStock} from "../../../services/Requests";
 
 global.matchMedia = global.matchMedia || function() {
     return {

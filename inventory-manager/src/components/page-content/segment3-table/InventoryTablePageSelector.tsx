@@ -1,7 +1,7 @@
 import React from 'react';
-import {Pagination, PaginationProps} from 'antd';
-import {useSearchContext} from "../../context/SearchContext";
-import {useProductsData} from "../../context/DataContext";
+import {Pagination, type PaginationProps} from 'antd';
+import {useSearchContext} from "../../../context/SearchContext";
+import {useProductsData} from "../../../context/DataContext";
 
 const InventoryTablePageSelector: React.FC = () => {
     const {page, setParams} = useSearchContext();

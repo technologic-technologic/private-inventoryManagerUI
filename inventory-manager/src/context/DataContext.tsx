@@ -1,5 +1,5 @@
 import React, {createContext, useEffect, useState} from "react";
-import {CategorySummary, Product} from "../types/Product";
+import type {CategorySummary, Product} from "../types/Product";
 import {getCategories, getFilteredProducts, getProducts, getSummary} from "../services/Requests";
 import {useSearchContext} from "./SearchContext";
 
