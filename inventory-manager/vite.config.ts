@@ -16,4 +16,10 @@ export default defineConfig({
       },
     },
   },
+  test: {
+    environment: 'jsdom',
+    isolate: true,
+    env: { TZ: 'UTC' },
+    sequence: { concurrent: false },
+  },
 })
