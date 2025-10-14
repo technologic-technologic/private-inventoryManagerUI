@@ -4,7 +4,7 @@ import type {TableColumnsType, TableProps} from 'antd';
 import type {Product} from "../../../types/Product";
 import {SearchOutlined} from '@ant-design/icons';
 import {useSearchContext} from "../../../context/SearchContext";
-import {useProductsData} from "../../../context/DataContext";
+import {useDataContext} from "../../../context/DataContext";
 import {deleteProduct, markInStock, markOutOfStock} from "../../../services/Requests";
 import ProductForm from "../segment2-new_product/ProductForm";
 
@@ -19,21 +19,28 @@ const InventoryTable: React.FC = () => {
         setEditingProduct(null);
     }
 
-    const {products, loading} = useProductsData();
     const searchInput = useRef<InputRef>(null);
 
-    const {stockQuantity, page, setParams} = useSearchContext();
-
+    const {stockQuantity, name, category, page, setParams} = useSearchContext();
+    const {products, loading} = useDataContext()
 
     const handleTableChange: TableProps<Product>['onChange'] = (_pagination, filters, sorter) => {
         setParams({page: ((page as number))});
-        if ((filters.name !== undefined) && ((filters.name as unknown as string) !== '') && (filters.name !== null)) {
+        if ((filters.name !== undefined) &&
+            ((filters.name as unknown as string) !== '') &&
+            (filters.name !== null) &&
+            (filters.name as unknown as string !== name)) {
             setParams({name: filters.name?.[0] as unknown as string});
         }
-        if (filters.category !== undefined && (filters.category as unknown as string) !== '' && filters.category !== null) {
+        if (filters.category !== undefined &&
+            (filters.category as unknown as string) !== '' &&
+            filters.category !== null &&
+            (filters.category as unknown as string !== category)) {
             setParams({category: filters.category?.[0] as unknown as string});
         }
-        if (filters.stockQuantity?.[0] && filters.stockQuantity?.[0] !== null) {
+        if (filters.stockQuantity?.[0] &&
+            filters.stockQuantity?.[0] !== null &&
+            filters.stockQuantity?.[0] as unknown as number !== stockQuantity) {
             setParams({stockQuantity: filters.stockQuantity?.[0] as unknown as number});
         }
         const sortObj = Array.isArray(sorter) ? sorter : [sorter];
