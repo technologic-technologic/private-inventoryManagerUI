@@ -8,18 +8,21 @@ interface Props {
 }
 
 const InputSearch: React.FC<Props> = ({parameter}) => {
-
-    const {setParams} = useSearchContext();
+    const {name, category, setParams} = useSearchContext();
+    const timerRef = React.useRef<number | null>(null);
 
     function onChange(e: React.ChangeEvent<HTMLInputElement>) {
         const next = e.target.value;
-        if (!e.target.value) {
-            if (parameter === 'name') setParams({name: null});
-            if (parameter === 'category') setParams({category: null});
-        } else {
-            if (parameter === 'name') setParams({name: next});
-            if (parameter === 'category') setParams({category: next});
-        }
+        if (timerRef.current) window.clearTimeout(timerRef.current);
+        timerRef.current = window.setTimeout(() => {
+            if (!e.target.value) {
+                if (parameter === 'name') setParams({name: null});
+                if (parameter === 'category') setParams({category: null});
+            } else {
+                if (parameter === 'name' && next !== name) setParams({name: next});
+                if (parameter === 'category' && next !== category) setParams({category: next});
+            }
+        }, 400);
     }
 
     const getPlaceholder = (): string => {
@@ -34,6 +37,6 @@ const InputSearch: React.FC<Props> = ({parameter}) => {
             onChange={onChange}
         />
     );
-}
+};
 
 export default InputSearch;

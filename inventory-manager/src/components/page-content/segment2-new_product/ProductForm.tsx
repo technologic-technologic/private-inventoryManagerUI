@@ -4,7 +4,7 @@ import type {Product} from "../../../types/Product";
 import {createProduct, updateProduct} from "../../../services/Requests";
 import {useSearchContext} from "../../../context/SearchContext";
 import dayjs from "dayjs";
-import {useProductsData} from "../../../context/DataContext";
+import {useDataContext} from "../../../context/DataContext";
 
 
 interface ProductFormProps {
@@ -17,7 +17,7 @@ interface ProductFormProps {
 const ProductForm: React.FC<ProductFormProps> = ({initialValues, mode = "create", onClose}) => {
     const [form] = Form.useForm<Product>();
     const {stockQuantity, setParams} = useSearchContext();
-    const {categories} = useProductsData();
+    const {categories} = useDataContext();
 
 
     const handleSave = async (values: Product) => {
