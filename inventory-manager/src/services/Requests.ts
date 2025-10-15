@@ -1,7 +1,5 @@
-import axios, {AxiosResponse} from "axios";
-import {Product, ProductResponse} from "../types/Product";
-
-const BASE_URL = "http://localhost:9090";
+import axios, {type AxiosResponse} from "axios";
+import type {Product, ProductResponse} from "../types/Product";
 
 export const getProducts = async (filters?: {
     name?: string;
@@ -15,18 +13,18 @@ export const getProducts = async (filters?: {
     sortBy?: string;
     sortDir?: "asc" | "desc";
 }): Promise<ProductResponse> => {
-    const response = await axios.get(`${BASE_URL}/products`, {
+    const response = await axios.get(`/api/products`, {
         params: filters,
     });
     return response.data;
 };
 
 export const getCategories = async (): Promise<AxiosResponse<any, any>> => {
-    return await axios.get(`${BASE_URL}/products/categories`);
+    return await axios.get(`/api/products/categories`);
 };
 
 export const getSummary = async (): Promise<AxiosResponse<any, any>> => {
-    return await axios.get(`${BASE_URL}/products/summary`);
+    return await axios.get(`/api/products/summary`);
 };
 
 export const getFilteredProducts = async (params?: {
@@ -42,7 +40,7 @@ export const getFilteredProducts = async (params?: {
     sortBy?: string;
     sortDir?: "asc" | "desc";
 }): Promise<AxiosResponse<any, any>> => {
-    return await axios.get(`${BASE_URL}/products/filters`, {
+    return await axios.get(`/api/products/filters`, {
         params,
         paramsSerializer: (params) => {
             const query = new URLSearchParams();
@@ -59,23 +57,23 @@ export const getFilteredProducts = async (params?: {
 };
 
 export const createProduct = async (product: Omit<Product, "id" | "createdAt" | "updatedAt">): Promise<Product> => {
-    const response = await axios.post(`${BASE_URL}/products`, product);
+    const response = await axios.post(`/api/products`, product);
     return response.data;
 };
 
 export const updateProduct = async (id: string, product: Partial<Product>): Promise<Product> => {
-    const response = await axios.put(`${BASE_URL}/products/${id}`, product);
+    const response = await axios.put(`/api/products/${id}`, product);
     return response.data;
 };
 
 export const markOutOfStock = async (id: string): Promise<void> => {
-    await axios.patch(`${BASE_URL}/products/${id}/outofstock`);
+    await axios.patch(`/api/products/${id}/outofstock`);
 };
 
 export const markInStock = async (id: string): Promise<void> => {
-    await axios.patch(`${BASE_URL}/products/${id}/instock`);
+    await axios.patch(`/api/products/${id}/instock`);
 };
 
 export const deleteProduct = async (id: string): Promise<void> => {
-    await axios.delete(`${BASE_URL}/products/${id}`);
+    await axios.delete(`/api/products/${id}`);
 };
