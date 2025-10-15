@@ -1,7 +1,7 @@
 import React from 'react';
 import {Col, Layout} from 'antd';
 import NewProductButton from "./segment2-new_product/NewProductButton";
-import InventoryTableObj from "./segment3-table/segment/InventoryTableObj";
+import InventoryTableObj from "./segment3-table/InventoryTableObj";
 import {SearchProvider} from "../../context/SearchContext";
 import InventoryMetricsTable from "./segment4-metrics/InventoryMetricsTable";
 import {DataProvider} from "../../context/DataContext";

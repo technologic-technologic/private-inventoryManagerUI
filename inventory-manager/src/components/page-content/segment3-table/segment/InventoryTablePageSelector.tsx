@@ -1,7 +1,7 @@
 import React from 'react';
 import {Pagination, type PaginationProps} from 'antd';
-import {useSearchContext} from "../../../context/SearchContext";
-import {useDataContext} from "../../../context/DataContext";
+import {useSearchContext} from "../../../../context/SearchContext";
+import {useDataContext} from "../../../../context/DataContext";
 
 const InventoryTablePageSelector: React.FC = () => {
     const {page, setParams} = useSearchContext();
@@ -16,6 +16,7 @@ const InventoryTablePageSelector: React.FC = () => {
                     onChange={handlePageChange}
                     current={(page as unknown as number) + 1}
                     showSizeChanger={false}
+                    role={'navigation'}
         />
     )
 }

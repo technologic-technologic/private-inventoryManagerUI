@@ -22,8 +22,7 @@ vi.mock("../services/Requests", () => (
             deleteProduct: vi.fn(),
 
         }
-    )
-);
+    ));
 
 const Consumer: React.FC = () => {
     const {setParams} = useSearchContext();
@@ -74,17 +73,16 @@ function renderWithProvider() {
     return {user, ...view};
 }
 
-beforeEach(() => {
-    vi.clearAllMocks();
-});
-
-afterEach(() => {
-    vi.useRealTimers();
-    cleanup();
-    vi.resetAllMocks();
-});
-
 describe("DataContext initial tests", () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+    });
+    afterEach(() => {
+        vi.useRealTimers();
+        cleanup();
+        vi.resetAllMocks();
+    });
+
     it("starts with nothing", () => {
         const {getByTestId} = renderWithProvider();
         expect(getByTestId("products").textContent).toBe("no");
@@ -97,6 +95,15 @@ describe("DataContext initial tests", () => {
 });
 
 describe("DataContext triggers", () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+    });
+    afterEach(() => {
+        vi.useRealTimers();
+        cleanup();
+        vi.resetAllMocks();
+    });
+
     it("trigger fetch", async () => {
         vi.mocked(getFilteredProducts).mockResolvedValueOnce({
             data: {

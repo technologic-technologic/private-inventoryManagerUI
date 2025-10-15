@@ -63,17 +63,16 @@ function renderWithProvider() {
     return {user, ...view};
 }
 
-beforeEach(() => {
-    vi.clearAllMocks();
-});
-
-afterEach(() => {
-    vi.useRealTimers();
-    cleanup();
-    vi.resetAllMocks();
-});
-
 describe("SearchContext tests", () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+    });
+    afterEach(() => {
+        vi.useRealTimers();
+        cleanup();
+        vi.resetAllMocks();
+    });
+
     it("exposes initial state", () => {
         const {getByTestId} = renderWithProvider();
         expect(getByTestId("name").textContent).toBe("");
