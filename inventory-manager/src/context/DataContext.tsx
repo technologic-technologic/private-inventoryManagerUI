@@ -1,5 +1,5 @@
-import React, {createContext, useEffect, useState} from "react";
-import {CategorySummary, Product} from "../types/Product";
+import React, {createContext, useContext, useEffect, useRef, useState} from "react";
+import type {CategorySummary, Product} from "../types/Product";
 import {getCategories, getFilteredProducts, getProducts, getSummary} from "../services/Requests";
 import {useSearchContext} from "./SearchContext";
 
@@ -13,9 +13,26 @@ interface ProductDataContextProps {
     refreshProducts: () => Promise<void>;
 }
 
-const DataContext = createContext<ProductDataContextProps | undefined>(undefined);
+const defaultValues = {
+    products: undefined,
+    loading: true,
+    error: null,
+    total: null,
+    categories: [],
+    summary: undefined,
+    refreshProducts: async () => {
+    },
+};
+
+const DataContext = createContext<ProductDataContextProps>(defaultValues);
+
+export const useDataContext = () => useContext(DataContext);
 
 export const DataProvider: React.FC<{ children: React.ReactNode }> = ({children}) => {
+    const {name, category, stockQuantity, page, sort} = useSearchContext();
+    const lastKeyRef = (useRef<string | null>(null));
+    const inFlightRef = (useRef(false));
+
     const [products, setProducts] = useState<Product[]>();
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
@@ -23,48 +40,21 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({children}
     const [categories, setCategories] = useState<string[]>([""]);
     const [summary, setSummary] = useState<CategorySummary[]>();
 
-
-    const refreshProducts = async () => {
-        setLoading(true);
-        try {
-            const fetched = await getProducts({page: 0});
-            setProducts(fetched.products);
-            setTotal(fetched.totalPages);
-            const fetchedCategories = await getCategories();
-            setCategories(fetchedCategories.data);
-            const fetchedSummary = await getSummary();
-            setSummary(fetchedSummary.data);
-
-        } catch (err: any) {
-            setError(err.message || "Unknown error");
-        } finally {
-            setLoading(false);
-        }
-    };
-
     useEffect(() => {
-        refreshProducts().then();
-    }, []);
+        const paramsKey = JSON.stringify({
+            name: name ?? null,
+            category: category ?? null,
+            stockQuantity: stockQuantity ?? null,
+            page: page ?? null,
+            sort: Array.isArray(sort) ? sort : (sort ?? null)
+        });
 
-    return (
-        <DataContext.Provider value={{products, loading, error, total, categories, summary, refreshProducts}}>
-            {children}
-        </DataContext.Provider>
-    );
-};
+        if (lastKeyRef.current === paramsKey) return;
+        if (inFlightRef.current) return;
 
-export function useProductsData() {
-    const {name, category, stockQuantity, page, sort} = useSearchContext();
+        inFlightRef.current = true;
+        lastKeyRef.current = paramsKey;
 
-    const [products, setProducts] = useState<Product[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-    const [total, setTotal] = useState<number>(0);
-    const [categories, setCategories] = useState<string[]>([""]);
-    const [summary, setSummary] = useState<CategorySummary[]>();
-
-
-    useEffect(() => {
         const fetchData = async () => {
             setLoading(true);
             try {
@@ -90,14 +80,48 @@ export function useProductsData() {
                 setSummary(fetchedSummary.data);
 
             } catch (err: any) {
-                setError(err.message);
+                let msg: string;
+                if (typeof err === 'object' && err !== null) {
+                    msg =
+                        (err as any)?.response?.data?.message ??
+                        (err as any)?.response?.data ??
+                        (err as Error)?.message ??
+                        'Unknown error';
+                    setError(String(msg));
+
+                } else {
+                    msg = String(err);
+                }
+                setError(msg);
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchData().then();
+        fetchData().then(() => inFlightRef.current = false);
     }, [name, category, stockQuantity, page, sort]);
 
-    return {products, loading, error, total, categories, summary};
-}
+    const refreshProducts = async () => {
+        setLoading(true);
+        try {
+            const fetched = await getProducts({page: 0});
+            setProducts(fetched.products);
+            setTotal(fetched.totalPages);
+            const fetchedCategories = await getCategories();
+            setCategories(fetchedCategories.data);
+            const fetchedSummary = await getSummary();
+            setSummary(fetchedSummary.data);
+
+        } catch (err: any) {
+            setError(err.message || "Unknown error");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <DataContext.Provider value={{products, loading, error, total, categories, summary, refreshProducts}}>
+            {children}
+        </DataContext.Provider>
+    );
+};
