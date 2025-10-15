@@ -1,5 +1,5 @@
-import InventoryTable from "../InventoryTable";
-import InventoryTablePageSelector from "../InventoryTablePageSelector";
+import InventoryTable from "./segment/InventoryTable";
+import InventoryTablePageSelector from "./segment/InventoryTablePageSelector";
 import React from "react";
 import {Content} from "antd/es/layout/layout";
 
