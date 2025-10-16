@@ -1,4 +1,4 @@
-import React, {type MouseEventHandler, useRef, useState} from 'react';
+import React, {useRef, useState} from 'react';
 import {Button, Input, type InputRef, Modal, Popconfirm, Space, Table, type TableColumnType} from 'antd';
 import type {TableColumnsType, TableProps} from 'antd';
 import type {Product} from "../../../../types/Product";
@@ -10,7 +10,6 @@ import ProductForm from "../../segment2-new_product/ProductForm";
 
 type DataIndex = keyof Product;
 const InventoryTable: React.FC = () => {
-    const [selectedRows, setSelectedRows] = useState<Product[]>([]);
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
@@ -22,7 +21,9 @@ const InventoryTable: React.FC = () => {
     const searchInput = useRef<InputRef>(null);
 
     const {stockQuantity, name, category, page, setParams} = useSearchContext();
-    const {products, loading} = useDataContext()
+    const {products, loading, refreshProducts} = useDataContext()
+    const timerRef = React.useRef<number | null>(null);
+
 
     const handleTableChange: TableProps<Product>['onChange'] = (_pagination, filters, sorter) => {
         setParams({page: ((page as number))});
@@ -222,52 +223,28 @@ const InventoryTable: React.FC = () => {
     ];
 
     const rowSelection = {
-        onChange: (_: any, selectedRowsData: Product[]) => {
-            setSelectedRows(selectedRowsData);
+        onChange: async (_: any, selectedRowsData: Product[]) => {
+            await changeAvailabilityOfSelected(selectedRowsData);
         },
     };
 
-    const changeAvailabilityOfSelected = async () => {
+    const changeAvailabilityOfSelected = async (selectedRows: Product[]) => {
         for (const product of selectedRows) {
             if (product.stockQuantity as number > 0) {
                 await markOutOfStock(product.id);
+                if (timerRef.current) window.clearTimeout(timerRef.current);
+                timerRef.current = window.setTimeout(async () => {
+                    await refreshProducts();
+                }, 200);
             } else {
                 await markInStock(product.id);
+                if (timerRef.current) window.clearTimeout(timerRef.current);
+                timerRef.current = window.setTimeout(async () => {
+                    await refreshProducts();
+                }, 200);
             }
         }
     };
-
-
-    const onClickOutOfStock: MouseEventHandler<HTMLElement> = async () => {
-        try {
-            await changeAvailabilityOfSelected().then().finally(() => {
-                if (stockQuantity === 0) {
-                    setParams(
-                        {
-                            name: undefined,
-                            page: 0,
-                            category: undefined,
-                            stockQuantity: 3,
-                            sort: undefined
-                        })
-                } else {
-                    setParams(
-                        {
-                            name: undefined,
-                            page: 0,
-                            category: undefined,
-                            stockQuantity: 0,
-                            sort: undefined
-                        })
-                }
-            });
-        } catch (e) {
-            console.log(e)
-        } finally {
-            setSelectedRows([]);
-        }
-    };
-
 
     return <>
         <Table<Product> rowSelection={rowSelection}
@@ -279,18 +256,6 @@ const InventoryTable: React.FC = () => {
                         pagination={false}
                         style={{width: "100%",}}
         />
-        {selectedRows.length > 0 && (
-            <>
-                <Button
-                    danger
-                    onClick={onClickOutOfStock}
-                    style={{marginBottom: 16, flex: "min-content"}}
-                >
-                    Change availability
-                </Button>
-            </>
-
-        )}
         <Modal
             title="Edit Product"
             open={isModalVisible}
