@@ -4,9 +4,9 @@
 The system allows creating, updating, filtering, and sorting products, 
 as well as tracking key metrics like total stock, inventory value, and average price.
 
-The project was built with a focus on usability, clear data visualization, 
-responsiveness and its supposed to be bug free. It supports pagination, 
-search filters, product availability toggling, and sorting by multiple columns.
+The project was built with a focus of usability, clear data visualization and 
+responsiveness, for an easy convenience store inventory management (and It's supposed to be bug free). 
+It supports pagination, search filters, product availability toggling, and sorting by multiple columns.
 
 ## Tech Stack
 
@@ -16,21 +16,7 @@ search filters, product availability toggling, and sorting by multiple columns.
 - **Backend:** REST API with CRUD and stock control endpoints
 [InventoryManagerBS](https://github.com/technologic-technologic/InventoryManagerBS.git)
 
-## Features
-
-- **Product CRUD**
-
-- **Filtering & Searching**
-
-- **Sorting**
-
-- **Stock Management**
-
-- **Inventory Metrics**
-
-- **Pagination**
-
-## Backend API (Expected)
+## Backend API (Expected communications)
 
 Business service git URL: https://github.com/technologic-technologic/InventoryManagerBS.git
 
@@ -50,15 +36,19 @@ The frontend expects the following API endpoints:
 To run the frontend locally:
 
 ```bash
+# go to directory from repo location
+cd inventory-manager
+```
+```bash
 # Install dependencies
 npm install
 ```
 ```bash
 # Run the app on port 8080
-npm start
+npm run dev
 ```
 
 ```bash
-# Run all tests
-npm test 
+# Run tests manually
+npm run test 
 ```

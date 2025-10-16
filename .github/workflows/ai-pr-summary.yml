@@ -1,0 +1,159 @@
+name: PR AI Summary
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  summarize:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get PR diff
+        id: diff
+        run: |
+          BASE="${{ github.event.pull_request.base.sha }}"
+          HEAD="${{ github.event.pull_request.head.sha }}"
+          # Trae exactamente esos commits (evita problemas de merge-base y shallow clones)
+          git fetch --no-tags --prune --depth=1 origin $BASE $HEAD
+          git diff $BASE $HEAD > pr.diff
+          echo "path=pr.diff" >> $GITHUB_OUTPUT
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install openai==1.*  # SDK oficial
+
+      - name: Generate AI summary (OpenAI)
+        id: ai
+        continue-on-error: true
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          MODEL: gpt-4o-mini
+        run: |
+          python - << 'PY'
+          import os
+          from openai import OpenAI
+          client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+          with open("pr.diff","r",encoding="utf-8") as f:
+            diff = f.read()[:200000]  # tope por costos/ruido
+
+          prompt = (
+            "You are a code reviewer. Summarize this PR in 2-20 bullets. "
+            "Include WHAT changed, WHY it matters, RISKS, TESTS to add, and any BREAKING CHANGES. "
+            "Highlight key features or changes. Consider markdown as the default output format."
+            "Keep in mind the following points:"
+            "1) If DIFF shows only documentation files (e.g., .md/.mdx/.txt/README), state 'Docs-only change', "
+            "  make clear that the change is included only in documentation files, if that is the case, "
+            "  otherwise explain normally, considering the DIFF changes like normal. "
+            "2) Include a short list of changed file paths as extracted from DIFF. "
+            "Keep it concise and actionable.\n\nDIFF:\n" + diff
+          )
+
+          resp = client.chat.completions.create(
+              model=os.getenv("MODEL","gpt-4o-mini"),
+              temperature=0.2,
+              messages=[{"role":"user","content":prompt}],
+          )
+          text = resp.choices[0].message.content.strip()
+          with open("summary.txt","w",encoding="utf-8") as f:
+              f.write(text)
+          PY
+
+      - name: Heuristic fallback if AI failed
+        if: ${{ steps.ai.outcome == 'failure' }}
+        run: |
+          python - << 'PY'
+          import re, pathlib
+          diff = pathlib.Path("pr.diff").read_text(encoding="utf-8")
+
+          added = len(re.findall(r"^\\+[^+].*$", diff, flags=re.M))
+          removed = len(re.findall(r"^\\-[^-].*$", diff, flags=re.M))
+          files = re.findall(r"^\\+\\+\\+ b/(.+)$", diff, flags=re.M)
+          
+          lower_paths = [f.lower() for f in files]
+          DOC_EXT = (".md", ".mdx", ".txt", ".rst", ".adoc")
+          is_doc  = lambda p: p.endswith(DOC_EXT) or "/docs/" in p or "/doc/" in p
+          docs_only = len(files) > 0 and all(is_doc(p) for p in lower_paths)
+          
+          # ---------- Doc-only summary ----------
+          if docs_only:
+              bullets_changed = []
+              for f in files[:20]:  # evita listas enormes
+                  bullets_changed.append(f"- `{f}`")
+              doc_summary = [
+                  "## PR Summary",
+                  "",
+                  "### WHAT Changed",
+                  "- **Docs-only change** detected from DIFF.",
+                  f"- Files changed ({len(files)}):",
+                  *bullets_changed,
+                  "",
+                  "### WHY It Matters",
+                  "- Improves documentation/README clarity and onboarding experience.",
+                  "",
+                  "### RISKS",
+                  "- None to runtime behavior (documentation only).",
+                  "",
+                  "### TESTS to Add",
+                  "- N/A (no code changes).",
+                  "",
+                  "### BREAKING CHANGES",
+                  "- None.",
+              ]
+              pathlib.Path("summary.txt").write_text("\n".join(doc_summary), encoding="utf-8")
+              raise SystemExit(0)
+
+          scopes = set()
+          for f in files:
+            fl = f.lower()
+            if "/controller" in fl: scopes.add("controller")
+            elif "/service" in fl:  scopes.add("service")
+            elif "/repository" in fl or "jparepository" in diff.lower(): scopes.add("repository")
+            elif "/entity" in fl or "/model" in fl: scopes.add("entity")
+            elif "application" in fl and (fl.endswith(".yml") or fl.endswith(".yaml") or fl.endswith(".properties")):
+                scopes.add("config")
+            elif fl.endswith("test.java"): scopes.add("test")
+
+          scope = ",".join(sorted(scopes)) if scopes else "core"
+          kind = "refactor"
+          if added and not removed: kind = "feat"
+          if removed and not added: kind = "chore"
+          if re.search(r"@Test", diff): kind = "test"
+          if re.search(r"fix|bug|exception|stacktrace", diff, re.I): kind = "fix"
+
+          subject = f"[Fallback] {kind}({scope}): {len(files)} file(s), +{added}/-{removed}"
+
+          bullets = []
+          bullets.append(f"- Files changed: {len(files)}")
+          bullets.append(f"- Lines: +{added} / -{removed}")
+          if scopes:
+            bullets.append(f"- Layers: {', '.join(sorted(scopes))}")
+          if re.search(r"@Transactional", diff): bullets.append("- Touches transactional boundaries")
+          if re.search(r"@RestController|@Controller", diff): bullets.append("- Controller changes present")
+          if re.search(r"@Service", diff): bullets.append("- Service-layer changes present")
+          if re.search(r"@Repository|JpaRepository", diff): bullets.append("- Repository-layer changes present")
+          if re.search(r"todo|fixme", diff, re.I): bullets.append("- Contains TODO/FIXME markers")
+
+          text = subject + "\\n\\n" + "\\n".join(bullets)
+          pathlib.Path("summary.txt").write_text(text, encoding="utf-8")
+          PY
+
+      - name: Comment on PR
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: ai-pr-summary
+          recreate: true
+          path: summary.txt
