@@ -71,7 +71,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({children}
                 const response = await getFilteredProducts(params)
 
                 setProducts(response.data.products);
-                setTotal(response.data.totalPages || 50);
+                setTotal(response.data.totalPages || 1);
 
                 const fetchedCategories = await getCategories();
                 setCategories(fetchedCategories.data);
