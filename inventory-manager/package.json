@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "test": "vitest",
-    "preview": "vite preview"
+    "preview": "vite preview --port 8080 --strictPort"
   },
   "dependencies": {
     "antd": "^5.27.1",
