@@ -11,7 +11,10 @@ const STOCK_OPTIONS = [
 const CascaderSearch: React.FC = () => {
     const { stockQuantity, setParams } = useSearchContext();
 
-    const value = stockQuantity !== undefined ? [String(stockQuantity)] : undefined;
+    const value = stockQuantity !== undefined
+        ? stockQuantity !== 3
+            ? [String(stockQuantity)] : ['0']
+        : undefined;
 
     const onChange = (val?: string[]) => {
         if (!val || val.length === 0) {
@@ -29,7 +32,7 @@ const CascaderSearch: React.FC = () => {
             allowClear
             placeholder="Stock"
             changeOnSelect={false}
-            style={{ flex: '1 1 220px', minWidth: 220, maxWidth: 420 }}        />
+            style={{ flex: '1 1 220px', minWidth: 220, maxWidth: 420 }}/>
     );
 };
 
