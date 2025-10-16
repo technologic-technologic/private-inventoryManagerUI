@@ -7,6 +7,7 @@ import {useSearchContext} from "../../../../context/SearchContext";
 import {useDataContext} from "../../../../context/DataContext";
 import {deleteProduct, markInStock, markOutOfStock} from "../../../../services/Requests";
 import ProductForm from "../../segment2-new_product/ProductForm";
+import currencyTransformator from "../../../../utils/CurrencyFormatter.ts";
 
 type DataIndex = keyof Product;
 const InventoryTable: React.FC = () => {
@@ -174,7 +175,9 @@ const InventoryTable: React.FC = () => {
             title: 'Price',
             dataIndex: 'unitPrice',
             sorter: {multiple: 3},
-            filteredValue: null
+            filteredValue: null,
+            render: (value: number | null | undefined) => (
+                value == null ? "—" : currencyTransformator(value)),
         },
         {
             title: 'Expiration Date',
