@@ -2,6 +2,7 @@ import React from 'react';
 import {Table, type TableColumnsType} from 'antd';
 import type {CategorySummary} from "../../../types/Product";
 import {useDataContext} from "../../../context/DataContext";
+import currencyTransformator from "../../../utils/CurrencyFormatter.ts";
 
 const InventoryMetricsTable: React.FC = () => {
     const {summary} = useDataContext();
@@ -18,10 +19,14 @@ const InventoryMetricsTable: React.FC = () => {
         {
             title: 'Total Value in Stock',
             dataIndex: 'valueInStock',
+            render: (value: number | null | undefined) => (
+                value == null ? "—" : currencyTransformator(value)),
         },
         {
             title: 'Average Price in Stock',
             dataIndex: 'averageValue',
+            render: (value: number | null | undefined) => (
+                value == null ? "—" : currencyTransformator(value)),
         },
     ];
 
@@ -38,8 +43,8 @@ const InventoryMetricsTable: React.FC = () => {
                        <Table.Summary.Row>
                            <Table.Summary.Cell index={summary?.length || 0}>Overall</Table.Summary.Cell>
                            <Table.Summary.Cell index={summary?.length || 0}>{overallStock}</Table.Summary.Cell>
-                           <Table.Summary.Cell index={summary?.length || 0}>{overallValue}</Table.Summary.Cell>
-                           <Table.Summary.Cell index={summary?.length || 0}>{overallValue/overallStock}</Table.Summary.Cell>
+                           <Table.Summary.Cell index={summary?.length || 0}>{currencyTransformator(overallValue)}</Table.Summary.Cell>
+                           <Table.Summary.Cell index={summary?.length || 0}>{currencyTransformator(overallValue/overallStock)}</Table.Summary.Cell>
                        </Table.Summary.Row>
                    )
                }}
