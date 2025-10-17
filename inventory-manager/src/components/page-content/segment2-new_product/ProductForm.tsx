@@ -278,7 +278,20 @@ const ProductForm: React.FC<ProductFormProps> = ({initialValues, mode = "create"
                 name="expirationDate"
                 label="Expiration Date"
                 tooltip="Not necessary. Expiration date of the product"
-                rules={[{required: false, message: "Please select expiration date"}]}
+                rules={[
+                    {required: false},
+                    {
+                        validator: (_, value) => {
+                            if (!value) {
+                                return Promise.resolve();
+                            }
+                            if (value < new Date()) {
+                                return Promise.reject(new Error("The date can't be in the past"));
+                            }
+                            return Promise.resolve();
+                        },
+                    },
+                ]}
                 initialValue={
                     initialValues?.expirationDate
                         ? dayjs(initialValues.expirationDate)
