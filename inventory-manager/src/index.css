@@ -28,6 +28,12 @@ body {
   place-items: center;
   min-width: 320px;
   min-height: 100vh;
+  background-color: rgb(237, 236, 236);
+  background-image: url(./assets/images/e-shape-white.png);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+  background-attachment: fixed;
 }
 
 code {
@@ -70,4 +76,9 @@ button:focus-visible {
   button {
     background-color: #f9f9f9;
   }
+}
+
+.ant-layout,
+.ant-layout-footer {
+  background: transparent;
 }
