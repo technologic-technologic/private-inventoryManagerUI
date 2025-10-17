@@ -30,20 +30,19 @@ search filters, product availability toggling, and sorting by multiple columns.
 
 - **Pagination**
 
+- **Visual Indicators (Optional)**
+
 ## Backend API (Expected)
 
 Business service git URL: https://github.com/technologic-technologic/InventoryManagerBS.git
 
 The frontend expects the following API endpoints:
 
-- `GET /products` – List all products with support pagination
+- `GET /products` – List products with support for filtering, sorting, and pagination
 - `POST /products` – Create a new product with validation
 - `PUT /products/{id}` – Update an existing product
 - `POST /products/{id}/outofstock` – Mark product as out of stock (stock = 0)
 - `PUT /products/{id}/instock` – Restore product to in-stock (stock = 10)
-- `GET /products/summary` – List a summary for the categories of products in stock
-- `GET /products/filters` – List products with support for filtering, sorting, and pagination
-- `GET /products/categories` – List categories of products
 
 ## Getting Started
 
@@ -52,13 +51,11 @@ To run the frontend locally:
 ```bash
 # Install dependencies
 npm install
-```
-```bash
-# Run the app on port 8080
-npm start
-```
 
+# Run the app on port 8080
+npm run start
+```
 ```bash
 # Run all tests
-npm test 
+npm run tests
 ```
