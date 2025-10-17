@@ -10,9 +10,13 @@ import ProductForm from "../../segment2-new_product/ProductForm";
 import currencyTransformator from "../../../../utils/CurrencyFormatter.ts";
 
 type DataIndex = keyof Product;
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 const InventoryTable: React.FC = () => {
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+    const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+
 
     const handleClose = () => {
         setIsModalVisible(false);
@@ -197,7 +201,7 @@ const InventoryTable: React.FC = () => {
                 {text: 'No stock', value: '2'}
             ],
             filterMultiple: false,
-            filteredValue: stockQuantity ? ['1', '2'].includes(String(stockQuantity)) ? [String(stockQuantity)] : null: null,
+            filteredValue: stockQuantity ? ['1', '2'].includes(String(stockQuantity)) ? [String(stockQuantity)] : null : null,
             onFilter: (_value, _record) => {
                 return true;
             },
@@ -226,8 +230,12 @@ const InventoryTable: React.FC = () => {
     ];
 
     const rowSelection = {
-        onChange: async (_: any, selectedRowsData: Product[]) => {
-            await changeAvailabilityOfSelected(selectedRowsData);
+        selectedRowKeys,
+        onChange: async (keys: React.Key[], rows: Product[]) => {
+            setSelectedRowKeys(keys);
+            await changeAvailabilityOfSelected(rows);
+            await delay(400).then(() => setSelectedRowKeys([]));
+
         },
     };
 
