@@ -15,11 +15,11 @@ const NewProductButton = () => {
              style={{
                  display: 'flex',
                  justifyContent: 'space-between',
-                 alignItems: 'center',   // <- vertical alignment
+                 alignItems: 'center',
                  marginBottom: 16,
              }}
         >
-            <Button type="primary" onClick={showModal}>Add new product</Button>
+            <Button type="primary" onClick={showModal} style={{backgroundColor:"#3b5891"}}>Add new product</Button>
             <Modal
                 title="Add new product to inventory"
                 open={isModalVisible}
